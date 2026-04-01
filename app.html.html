@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QPE — Quote Packaging Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --sage:          #3D6B52;
+      --sage-light:    #5A8B6E;
+      --sage-dark:     #2C5040;
+      --sage-muted:    #E8F0EB;
+      --cream:         #F9F7F2;
+      --cream-dark:    #F0ECE3;
+      --charcoal:      #1A1A18;
+      --charcoal-lt:   #3A3A38;
+      --gray:          #6B6B68;
+      --gray-light:    #B8B8B5;
+      --border:        #E2DDD5;
+      --white:         #FFFFFF;
+      --warn:          #C4773A;
+      --warn-light:    #FDF3E8;
+      --shadow:        0 2px 12px rgba(26,26,24,.08);
+      --shadow-lg:     0 8px 32px rgba(26,26,24,.12);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      line-height: 1.6;
+      font-size: 15px;
+    }
+    h1,h2,h3,h4 { font-family: 'DM Serif Display', serif; line-height: 1.2; }
+
+    /* ── HEADER ─────────────────────────────────────── */
+    .site-header {
+      background: var(--charcoal);
+      color: #fff;
+      height: 56px;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px;
+    }
+    .logo-mark {
+      width: 32px; height: 32px;
+      background: var(--sage);
+      border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700; font-size: 12px;
+      letter-spacing: .06em;
+      flex-shrink: 0;
+    }
+    .logo-sub {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 400;
+      opacity: .45;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      margin-left: 4px;
+    }
+    .settings-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.15);
+      color: #fff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      transition: background .2s;
+    }
+    .settings-btn:hover { background: rgba(255,255,255,.18); }
+
+    /* ── SETTINGS PANEL ─────────────────────────────── */
+    .settings-panel {
+      background: var(--charcoal-lt);
+      color: #fff;
+      padding: 20px 24px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      display: none;
+    }
+    .settings-panel.open { display: block; }
+    .settings-inner {
+      max-width: 840px;
+      margin: 0 auto;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .s-field { display: flex; flex-direction: column; gap: 6px; }
+    .s-field.grow { flex: 2; min-width: 280px; }
+    .s-field.fixed { flex: 1; min-width: 200px; }
+    .s-field label {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .08em; text-transform: uppercase;
+      opacity: .55;
+    }
+    .s-field input {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.15);
+      color: #fff;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      width: 100%;
+      outline: none;
+    }
+    .s-field input:focus { border-color: var(--sage-light); }
+    .s-field input::placeholder { opacity: .3; }
+    .s-note { font-size: 11px; opacity: .35; margin-top: 6px; }
+
+    /* ── MAIN ───────────────────────────────────────── */
+    .main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* ── INPUT FORM ─────────────────────────────────── */
+    .input-card {
+      background: var(--white);
+      border-radius: 12px;
+      padding: 36px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+    }
+    .eyebrow {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 6px;
+    }
+    .input-card h1 { font-size: 28px; margin-bottom: 28px; }
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .fg { display: flex; flex-direction: column; gap: 5px; }
+    .fg.full { grid-column: 1 / -1; }
+    .fg label { font-size: 13px; font-weight: 500; color: var(--charcoal-lt); }
+    .fg label .opt { color: var(--gray-light); font-weight: 400; }
+    input[type="text"],
+    input[type="password"],
+    textarea {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--charcoal);
+      background: var(--white);
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    input[type="text"]:focus,
+    input[type="password"]:focus,
+    textarea:focus {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(61,107,82,.1);
+    }
+    textarea { resize: vertical; min-height: 180px; line-height: 1.7; }
+    textarea.quote-ta {
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      min-height: 220px;
+    }
+
+    /* mode toggle */
+    .mode-wrap { margin: 20px 0; }
+    .mode-wrap > span {
+      display: block;
+      font-size: 13px; font-weight: 500;
+      color: var(--charcoal-lt);
+      margin-bottom: 10px;
+    }
+    .toggle-row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .toggle {
+      display: inline-flex;
+      background: var(--cream-dark);
+      border-radius: 8px;
+      padding: 4px;
+      gap: 4px;
+    }
+    .toggle-btn {
+      padding: 8px 22px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px; font-weight: 500;
+      color: var(--gray);
+      background: transparent;
+      transition: all .2s;
+    }
+    .toggle-btn.active {
+      background: var(--white);
+      color: var(--charcoal);
+      box-shadow: 0 1px 4px rgba(0,0,0,.12);
+    }
+    .mode-desc {
+      font-size: 13px;
+      color: var(--gray);
+      margin-top: 8px;
+      line-height: 1.5;
+    }
+
+    /* generate button */
+    .gen-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--sage);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px; font-weight: 600;
+      cursor: pointer;
+      transition: background .2s, transform .1s;
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .gen-btn:hover:not(:disabled) { background: var(--sage-dark); }
+    .gen-btn:active:not(:disabled) { transform: scale(.99); }
+    .gen-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+    .error-msg {
+      display: none;
+      margin-top: 12px;
+      background: #FEE;
+      border: 1px solid #F9C;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13px;
+      color: #C33;
+    }
+    .error-msg.show { display: block; }
+
+    /* ── LOADING ─────────────────────────────────────── */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 56px 24px;
+    }
+    .loading.show { display: block; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid var(--sage-muted);
+      border-top-color: var(--sage);
+      border-radius: 50%;
+      animation: spin .8s linear infinite;
+      margin: 0 auto 16px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading p { font-size: 15px; font-weight: 500; color: var(--charcoal); }
+    .loading small { font-size: 13px; color: var(--gray); margin-top: 4px; display: block; }
+
+    /* ── OUTPUT SECTION ─────────────────────────────── */
+    .output { display: none; margin-top: 32px; }
+    .output.show { display: block; }
+
+    .out-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    .act-btn {
+      display: flex; align-items: center; gap: 6px;
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 500;
+      cursor: pointer;
+      border: 1.5px solid var(--border);
+      background: var(--white);
+      color: var(--charcoal-lt);
+      transition: all .2s;
+    }
+    .act-btn:hover { border-color: var(--sage); color: var(--sage); }
+    .act-btn.primary {
+      background: var(--sage);
+      color: #fff;
+      border-color: var(--sage);
+    }
+    .act-btn.primary:hover { background: var(--sage-dark); border-color: var(--sage-dark); color: #fff; }
+
+    /* ── PROPOSAL DOCUMENT ──────────────────────────── */
+    .proposal-doc {
+      background: var(--white);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+
+    /* header band */
+    .prop-head {
+      background: var(--sage);
+      color: #fff;
+      padding: 32px 40px;
+    }
+    .prop-company {
+      font-family: 'DM Serif Display', serif;
+      font-size: 26px;
+      margin-bottom: 3px;
+    }
+    .prop-tagline { font-size: 13px; opacity: .7; margin-bottom: 24px; }
+    .prop-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .meta-cell {
+      background: rgba(255,255,255,.12);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    .meta-lbl {
+      font-size: 10px;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      opacity: .6;
+      margin-bottom: 4px;
+    }
+    .meta-val { font-size: 15px; font-weight: 500; }
+
+    /* body */
+    .prop-body { padding: 40px; }
+
+    /* ── SINGLE MODE ─────────────────────────────────── */
+    .cat-section { margin-bottom: 32px; }
+    .cat-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      border-bottom: 1.5px solid var(--border);
+    }
+    .cat-icon {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+    .cat-icon.base       { background: var(--sage-muted); }
+    .cat-icon.addons     { background: #EBF3FF; }
+    .cat-icon.acc        { background: #F5EBFF; }
+    .cat-title-block { flex: 1; }
+    .cat-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 18px;
+      color: var(--charcoal);
+      line-height: 1.1;
+    }
+    .cat-sub { font-size: 12px; color: var(--gray); }
+    .cat-count {
+      font-size: 12px;
+      color: var(--gray);
+      background: var(--cream);
+      padding: 2px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+    .line-tbl { width: 100%; border-collapse: collapse; }
+    .line-tbl tr { border-bottom: 1px solid var(--cream-dark); }
+    .line-tbl tr:last-child { border-bottom: none; }
+    .line-tbl td { padding: 9px 0; font-size: 14px; }
+    .line-tbl td.iname { font-weight: 500; padding-right: 12px; }
+    .line-tbl td.iprice {
+      text-align: right;
+      color: var(--charcoal-lt);
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+    .cat-subtotal {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 16px;
+      padding-top: 10px;
+      margin-top: 4px;
+      border-top: 1.5px solid var(--border);
+    }
+    .sub-lbl { font-size: 13px; color: var(--gray); font-weight: 500; }
+    .sub-val {
+      font-size: 16px; font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── TIERED MODE ─────────────────────────────────── */
+    .tiered-intro { margin-bottom: 24px; }
+    .tiered-intro h2 { font-size: 22px; margin-bottom: 6px; }
+    .tiered-intro p { font-size: 14px; color: var(--gray); }
+
+    .pkg-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    .pkg-card {
+      border-radius: 10px;
+      border: 1.5px solid var(--border);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .pkg-card.featured {
+      border-color: var(--sage);
+      box-shadow: 0 0 0 3px rgba(61,107,82,.14);
+    }
+    .pkg-head { padding: 20px; }
+    .pkg-card.good   .pkg-head { background: var(--cream); color: var(--charcoal); }
+    .pkg-card.better .pkg-head { background: var(--sage); color: #fff; }
+    .pkg-card.best   .pkg-head { background: var(--sage-dark); color: #fff; }
+    .pkg-tier {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      opacity: .55; margin-bottom: 4px;
+    }
+    .pkg-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      margin-bottom: 6px;
+    }
+    .pkg-tagline { font-size: 12px; opacity: .65; line-height: 1.4; }
+    .pkg-price {
+      font-size: 26px; font-weight: 700;
+      margin-top: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .pkg-price small { font-size: 11px; opacity: .5; font-weight: 400; }
+    .pop-badge {
+      display: inline-block;
+      background: #fff;
+      color: var(--sage);
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .06em; text-transform: uppercase;
+      padding: 2px 9px;
+      border-radius: 100px;
+      margin-top: 8px;
+    }
+    .pkg-body { padding: 16px 20px; flex: 1; }
+    .pkg-sec-lbl {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gray-light);
+      margin: 10px 0 6px;
+    }
+    .pkg-body ul { list-style: none; display: flex; flex-direction: column; gap: 5px; }
+    .pkg-body li {
+      font-size: 13px;
+      color: var(--charcoal-lt);
+      display: flex; align-items: flex-start; gap: 7px;
+    }
+    .pkg-body li::before {
+      content: "✓";
+      color: var(--sage);
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .pkg-materials-note {
+      font-size: 12px;
+      color: var(--gray);
+      margin-bottom: 24px;
+      margin-top: -8px;
+    }
+
+    /* tiered loaded totals */
+    .tiered-totals {
+      display: none;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .tiered-totals.show { display: flex; }
+    .tt-cell {
+      flex: 1;
+      text-align: center;
+      padding: 14px 12px;
+      border-radius: 10px;
+    }
+    .tt-cell.good   { background: var(--cream); }
+    .tt-cell.better { background: var(--sage-muted); border: 1.5px solid var(--sage); }
+    .tt-cell.best   { background: var(--charcoal); color: #fff; }
+    .tt-lbl { font-size: 11px; font-weight: 600; letter-spacing: .06em; margin-bottom: 4px; }
+    .tt-cell.better .tt-lbl { color: var(--sage); }
+    .tt-cell.best   .tt-lbl { opacity: .55; }
+    .tt-val { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+    .tt-note { font-size: 12px; color: var(--gray); margin-top: 10px; }
+
+    /* ── ADDITIONAL COSTS ───────────────────────────── */
+    .divider { border: none; border-top: 1.5px solid var(--border); margin: 28px 0; }
+
+    .add-costs {
+      background: var(--cream);
+      border-radius: 10px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .add-costs h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 17px;
+      margin-bottom: 16px;
+    }
+    .cost-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .cf { display: flex; flex-direction: column; gap: 4px; }
+    .cf.span2 { grid-column: 1 / -1; }
+    .cf label { font-size: 12px; font-weight: 500; color: var(--gray); }
+    .cf-row { display: flex; }
+    .cf-pre {
+      background: var(--white);
+      border: 1.5px solid var(--border);
+      border-right: none;
+      padding: 8px 10px;
+      border-radius: 8px 0 0 8px;
+      font-size: 14px;
+      color: var(--gray);
+      line-height: 1.2;
+    }
+    .cf-row:focus-within .cf-pre { border-color: var(--sage); }
+    input.cost-in {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1.5px solid var(--border);
+      border-left: none;
+      border-radius: 0 8px 8px 0;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      color: var(--charcoal);
+      background: var(--white);
+      outline: none;
+      font-variant-numeric: tabular-nums;
+    }
+    input.cost-in:focus { border-color: var(--sage); }
+    textarea.addons-ta {
+      width: 100%;
+      min-height: 80px;
+      padding: 10px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--charcoal);
+      background: var(--white);
+      resize: vertical;
+      outline: none;
+    }
+    textarea.addons-ta:focus { border-color: var(--sage); box-shadow: 0 0 0 3px rgba(61,107,82,.1); }
+
+    /* ── GRAND TOTAL ────────────────────────────────── */
+    .grand-total {
+      background: var(--charcoal);
+      color: #fff;
+      border-radius: 10px;
+      padding: 20px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .gt-lbl { font-size: 14px; opacity: .65; }
+    .gt-note { font-size: 11px; opacity: .4; margin-top: 2px; }
+    .gt-val {
+      font-family: 'DM Serif Display', serif;
+      font-size: 30px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── NEEDS REVIEW ───────────────────────────────── */
+    .needs-review {
+      display: none;
+      background: var(--warn-light);
+      border: 1.5px solid rgba(196,119,58,.22);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .needs-review.show { display: block; }
+    .nr-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+    .nr-title { font-size: 15px; font-weight: 600; color: var(--warn); }
+    .nr-sub { font-size: 12px; color: var(--gray); }
+    .nr-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 0;
+      border-bottom: 1px solid rgba(196,119,58,.12);
+    }
+    .nr-item:last-child { border-bottom: none; }
+    .nr-name { font-size: 14px; font-weight: 500; }
+    .nr-reason {
+      font-size: 12px;
+      color: var(--warn);
+      background: rgba(196,119,58,.1);
+      padding: 2px 9px;
+      border-radius: 100px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── EMAIL SECTION ──────────────────────────────── */
+    .email-card {
+      background: var(--white);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      margin-top: 24px;
+      overflow: hidden;
+    }
+    .email-head {
+      padding: 14px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .email-title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .email-body {
+      padding: 28px;
+      font-size: 14px;
+      line-height: 1.85;
+      color: var(--charcoal);
+      white-space: pre-wrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    /* ── PRINT ──────────────────────────────────────── */
+    @media print {
+      .site-header, .settings-panel, .input-card, .out-actions,
+      .email-card, .loading, .gen-btn { display: none !important; }
+      body { background: #fff; }
+      .main { padding: 0; max-width: 100%; }
+      .output { display: block !important; }
+      .proposal-doc { box-shadow: none; border: none; border-radius: 0; }
+      .pkg-grid, .needs-review { break-inside: avoid; }
+      .add-costs { background: #f9f9f9; }
+    }
+
+    /* ── RESPONSIVE ─────────────────────────────────── */
+    @media (max-width: 768px) {
+      .main { padding: 24px 16px 60px; }
+      .input-card { padding: 24px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .prop-head { padding: 24px; }
+      .prop-meta { grid-template-columns: 1fr; gap: 8px; }
+      .prop-body { padding: 24px; }
+      .pkg-grid { grid-template-columns: 1fr; }
+      .cost-grid { grid-template-columns: 1fr; }
+      .tiered-totals { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ────────────────────────────────────────── -->
+<header class="site-header">
+  <div class="logo">
+    <div class="logo-mark">QPE</div>
+    Quote Packaging Engine<span class="logo-sub">&nbsp;Field Edition</span>
+  </div>
+  <button class="settings-btn" onclick="toggleSettings()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>
+    API Settings
+  </button>
+</header>
+
+<!-- ── SETTINGS PANEL ─────────────────────────────────── -->
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-inner">
+    <div class="s-field grow">
+      <label>Anthropic API Key</label>
+      <input type="password" id="apiKey" placeholder="sk-ant-api03-…" />
+      <div class="s-note">Key is used only for the API request and is never stored or sent anywhere else. Keep this tab private.</div>
+    </div>
+    <div class="s-field fixed">
+      <label>Model</label>
+      <input type="text" id="modelId" value="claude-sonnet-4-20250514" />
+    </div>
+  </div>
+</div>
+
+<!-- ── MAIN ────────────────────────────────────────────── -->
+<main class="main">
+
+  <!-- INPUT FORM -->
+  <div class="input-card">
+    <div class="eyebrow">New Proposal</div>
+    <h1>Quote Packaging Engine</h1>
+
+    <div class="form-grid">
+      <div class="fg">
+        <label for="companyName">Company Name</label>
+        <input type="text" id="companyName" placeholder="Your company name" value="Acadia Pergola Co." />
+      </div>
+      <div class="fg">
+        <label for="customerName">Customer Name</label>
+        <input type="text" id="customerName" placeholder="Client or household name" value="The Henderson Family" />
+      </div>
+      <div class="fg full">
+        <label for="projectName">Project Name / Description</label>
+        <input type="text" id="projectName" placeholder="Brief description of the project" value="Ridgeline Freestanding Pergola 14x20" />
+      </div>
+      <div class="fg full">
+        <label for="tagline">Company Tagline / Contact Info <span class="opt">(optional)</span></label>
+        <input type="text" id="tagline" placeholder="e.g. Crafting outdoor spaces since 2010 · (555) 400-2200 · hello@acadia.co" />
+      </div>
+      <div class="fg full">
+        <label for="vendorQuote">Vendor Quote <span class="opt">— paste line items below</span></label>
+        <textarea id="vendorQuote" class="quote-ta" placeholder="Ridgeline Frame System: $4,200&#10;Post Anchors (set of 4): $480&#10;...">Ridgeline Frame System: $4,200
+Post Anchors (set of 4): $480
+Motorized Shade Louvers: $1,160
+LED Lighting Kit: $380
+Decorative Post Wraps: $220
+Pergola Side Screen Panel: $340
+Concrete Footing Work: $0 (price TBD)
+Premium Stain Finish: $290</textarea>
+      </div>
+    </div>
+
+    <div class="mode-wrap">
+      <span>Output Mode</span>
+      <div class="toggle-row">
+        <div class="toggle">
+          <button class="toggle-btn active" id="btnSingle" onclick="setMode('single')">Single View</button>
+          <button class="toggle-btn" id="btnTiered" onclick="setMode('tiered')">Tiered Packages</button>
+        </div>
+      </div>
+      <div class="mode-desc" id="modeDesc">Single View: One structured proposal with all items organized by category.</div>
+    </div>
+
+    <button class="gen-btn" id="genBtn" onclick="generate()">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Generate Proposal
+    </button>
+    <div class="error-msg" id="errorMsg"></div>
+  </div>
+
+  <!-- LOADING -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p>Analyzing quote and building proposal…</p>
+    <small>This usually takes 10–20 seconds</small>
+  </div>
+
+  <!-- OUTPUT -->
+  <div class="output" id="output">
+
+    <div class="out-actions">
+      <button class="act-btn primary" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Print / Save as PDF
+      </button>
+      <button class="act-btn" onclick="goBack()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>
+        Edit &amp; Regenerate
+      </button>
+    </div>
+
+    <!-- PROPOSAL DOCUMENT -->
+    <div class="proposal-doc">
+
+      <!-- Header band -->
+      <div class="prop-head">
+        <div class="prop-company" id="outCompany"></div>
+        <div class="prop-tagline" id="outTagline"></div>
+        <div class="prop-meta">
+          <div class="meta-cell">
+            <div class="meta-lbl">Prepared For</div>
+            <div class="meta-val" id="outCustomer"></div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-lbl">Project</div>
+            <div class="meta-val" id="outProject"></div>
+          </div>
+          <div class="meta-cell">
+            <div class="meta-lbl">Date</div>
+            <div class="meta-val" id="outDate"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="prop-body">
+
+        <!-- Dynamic proposal content -->
+        <div id="propContent"></div>
+
+        <!-- Tiered loaded totals (shown when tiered + costs entered) -->
+        <div class="tiered-totals" id="tieredTotals">
+          <div class="tt-cell good">
+            <div class="tt-lbl">Good — All In</div>
+            <div class="tt-val" id="ttGood">—</div>
+          </div>
+          <div class="tt-cell better">
+            <div class="tt-lbl">Better — All In</div>
+            <div class="tt-val" id="ttBetter">—</div>
+          </div>
+          <div class="tt-cell best">
+            <div class="tt-lbl">Best — All In</div>
+            <div class="tt-val" id="ttBest">—</div>
+          </div>
+        </div>
+        <div class="tt-note" id="ttNote" style="display:none; font-size:12px; color:var(--gray); margin-bottom:20px; margin-top:-16px;">
+          Fully loaded estimates include materials + permitting, labor, and electrical costs below.
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Additional costs -->
+        <div class="add-costs">
+          <h3>Additional Project Costs</h3>
+          <div class="cost-grid">
+            <div class="cf">
+              <label>Permitting Cost</label>
+              <div class="cf-row">
+                <span class="cf-pre">$</span>
+                <input type="number" class="cost-in" id="permitCost" placeholder="0.00" min="0" step="0.01" oninput="updateTotals()" />
+              </div>
+            </div>
+            <div class="cf">
+              <label>Labor Cost</label>
+              <div class="cf-row">
+                <span class="cf-pre">$</span>
+                <input type="number" class="cost-in" id="laborCost" placeholder="0.00" min="0" step="0.01" oninput="updateTotals()" />
+              </div>
+            </div>
+            <div class="cf">
+              <label>Electrical / Utility Cost</label>
+              <div class="cf-row">
+                <span class="cf-pre">$</span>
+                <input type="number" class="cost-in" id="electricalCost" placeholder="0.00" min="0" step="0.01" oninput="updateTotals()" />
+              </div>
+            </div>
+            <div class="cf span2">
+              <label>Company Add-Ons / Notes</label>
+              <textarea class="addons-ta" id="companyAddons" placeholder="Describe any included warranties, prep work, site cleanup, or other services your company provides…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grand total (single mode) -->
+        <div class="grand-total" id="grandTotalBlock">
+          <div>
+            <div class="gt-lbl">Estimated Project Total</div>
+            <div class="gt-note" id="gtNote">Materials only — enter costs above to update</div>
+          </div>
+          <div class="gt-val" id="gtVal">—</div>
+        </div>
+
+        <!-- Needs Review -->
+        <div class="needs-review" id="needsReview">
+          <div class="nr-head">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C4773A" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div class="nr-title">Needs Review</div>
+            <div class="nr-sub">These items were flagged and excluded from totals</div>
+          </div>
+          <div id="nrItems"></div>
+        </div>
+
+      </div><!-- /prop-body -->
+    </div><!-- /proposal-doc -->
+
+    <!-- Email Draft -->
+    <div class="email-card">
+      <div class="email-head">
+        <div class="email-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Client Email Draft
+        </div>
+        <button class="act-btn" id="copyBtn" onclick="copyEmail()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+          Copy Email
+        </button>
+      </div>
+      <div class="email-body" id="emailBody"></div>
+    </div>
+
+  </div><!-- /output -->
+
+</main>
+
+<script>
+  // ── STATE ──────────────────────────────────────────────────────────────
+  let mode = 'single';
+  let data = null;
+
+  // ── HELPERS ────────────────────────────────────────────────────────────
+  function $id(id) { return document.getElementById(id); }
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  function fmt(n) {
+    if (n == null || isNaN(n)) return '—';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency', currency: 'USD',
+      minimumFractionDigits: 0, maximumFractionDigits: 0
+    }).format(n);
+  }
+
+  function sumItems(arr) {
+    return (arr || []).reduce((s, i) => s + (typeof i.price === 'number' ? i.price : 0), 0);
+  }
+
+  function extraCosts() {
+    return (parseFloat($id('permitCost').value) || 0)
+         + (parseFloat($id('laborCost').value) || 0)
+         + (parseFloat($id('electricalCost').value) || 0);
+  }
+
+  // ── UI ACTIONS ─────────────────────────────────────────────────────────
+  function toggleSettings() {
+    $id('settingsPanel').classList.toggle('open');
+  }
+
+  function setMode(m) {
+    mode = m;
+    $id('btnSingle').classList.toggle('active', m === 'single');
+    $id('btnTiered').classList.toggle('active', m === 'tiered');
+    $id('modeDesc').textContent = m === 'single'
+      ? 'Single View: One structured proposal with all items organized by category.'
+      : 'Tiered Packages: Three package options — Good, Better, and Best — at progressively higher investment levels.';
+  }
+
+  function showError(msg) {
+    const el = $id('errorMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+
+  function clearError() { $id('errorMsg').classList.remove('show'); }
+
+  function setLoading(on) {
+    $id('genBtn').disabled = on;
+    $id('loading').classList.toggle('show', on);
+    if (on) $id('output').classList.remove('show');
+  }
+
+  function goBack() {
+    $id('output').classList.remove('show');
+    document.querySelector('.input-card').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // ── API ────────────────────────────────────────────────────────────────
+  async function callAPI(apiKey, model, prompt) {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: 4096,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err?.error?.message || `API error ${res.status}`);
+    }
+    const json = await res.json();
+    return json.content[0].text;
+  }
+
+  // ── PROMPT ─────────────────────────────────────────────────────────────
+  function buildPrompt({ company, customer, project, quote, outputMode }) {
+    return `You are a proposal generation assistant for a field service / contractor company.
+
+COMPANY: ${company}
+CUSTOMER: ${customer}
+PROJECT: ${project}
+OUTPUT MODE: ${outputMode.toUpperCase()}
+
+VENDOR QUOTE (raw):
+${quote}
+
+TASK: Parse every line item from the vendor quote and categorize each into one of these buckets:
+
+1. baseParts — Core structural components without which the project cannot function. The essential foundation.
+2. addOns — Optional upgrades or functional enhancements that improve the structure but are not strictly required.
+3. accessories — Non-structural, decorative, aesthetic, or peripheral items that enhance appearance or comfort.
+4. needsReview — Flag items that: have price $0 with a note like "TBD" or "price pending", have ambiguous or unclear descriptions, are missing key information, or could reasonably fit multiple categories. Include a concise reason.
+
+RULES:
+- Extract price as a plain number (e.g., 4200, not "$4,200"). If price is $0 with a qualifying note, set price to null and add to needsReview.
+- Do NOT include the same item in multiple arrays.
+- Every line item must appear in exactly one array.
+
+Also generate a professional client-facing email draft presenting this proposal. The email should:
+- Have a subject line on the first line formatted as: Subject: [subject here]
+- Be 2–3 paragraphs: warm opening referencing the specific project, body summarizing what's included and why it's a great fit, closing with a clear call-to-action (schedule a call or reply with questions)
+- Use the actual company name (${company}), customer name (${customer}), and project name (${project})
+- Sound professional and confident, not salesy
+
+Return ONLY a raw JSON object — no markdown, no code fences, no explanation. Use this exact structure:
+{
+  "baseParts": [{"name": "...", "price": 1234}],
+  "addOns": [{"name": "...", "price": 1234}],
+  "accessories": [{"name": "...", "price": 1234}],
+  "needsReview": [{"name": "...", "price": null, "reason": "..."}],
+  "emailDraft": "Subject: ...\\n\\nDear ${customer},\\n\\n..."
+}`;
+  }
+
+  // ── GENERATE ───────────────────────────────────────────────────────────
+  async function generate() {
+    clearError();
+
+    const apiKey = $id('apiKey').value.trim();
+    if (!apiKey) {
+      $id('settingsPanel').classList.add('open');
+      showError('Please enter your Anthropic API key in the settings panel above.');
+      return;
+    }
+
+    const quote = $id('vendorQuote').value.trim();
+    if (!quote) { showError('Please paste a vendor quote before generating.'); return; }
+
+    const company  = $id('companyName').value.trim()  || 'Your Company';
+    const customer = $id('customerName').value.trim() || 'Valued Customer';
+    const project  = $id('projectName').value.trim()  || 'Your Project';
+    const tagline  = $id('tagline').value.trim();
+    const model    = $id('modelId').value.trim() || 'claude-sonnet-4-20250514';
+
+    setLoading(true);
+    try {
+      const prompt = buildPrompt({ company, customer, project, quote, outputMode: mode });
+      let raw = await callAPI(apiKey, model, prompt);
+
+      // Strip accidental markdown fences
+      raw = raw.trim();
+      if (raw.startsWith('```')) {
+        raw = raw.replace(/^```[a-z]*\n?/i, '').replace(/\n?```$/i, '').trim();
+      }
+
+      data = JSON.parse(raw);
+      data._meta = { company, customer, project, tagline, mode };
+
+      renderProposal(data);
+      setLoading(false);
+      $id('output').classList.add('show');
+      $id('output').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } catch (err) {
+      setLoading(false);
+      console.error(err);
+      showError('Error: ' + err.message + ' — Check your API key and try again.');
+    }
+  }
+
+  // ── RENDER ─────────────────────────────────────────────────────────────
+  function renderProposal(d) {
+    const { company, customer, project, tagline, mode: m } = d._meta;
+
+    // Header
+    $id('outCompany').textContent  = company;
+    $id('outTagline').textContent  = tagline;
+    $id('outTagline').style.display = tagline ? '' : 'none';
+    $id('outCustomer').textContent = customer;
+    $id('outProject').textContent  = project;
+    $id('outDate').textContent     = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    // Content
+    $id('propContent').innerHTML = m === 'single' ? renderSingle(d) : renderTiered(d);
+
+    // Show/hide blocks
+    $id('grandTotalBlock').style.display = m === 'single' ? 'flex' : 'none';
+
+    // Needs Review
+    renderNeedsReview(d.needsReview);
+
+    // Email
+    $id('emailBody').textContent = d.emailDraft || '';
+
+    // Reset cost inputs
+    ['permitCost','laborCost','electricalCost'].forEach(id => $id(id).value = '');
+    $id('companyAddons').value = '';
+
+    updateTotals();
+  }
+
+  // Single mode
+  function renderSingle(d) {
+    const cats = [
+      { key: 'baseParts',   label: 'Base Parts',   sub: 'Core structural components',     icon: '🏗', cls: 'base'   },
+      { key: 'addOns',      label: 'Add-Ons',      sub: 'Optional upgrades & enhancements', icon: '⚡', cls: 'addons' },
+      { key: 'accessories', label: 'Accessories',  sub: 'Decorative & non-structural items', icon: '✨', cls: 'acc'    }
+    ];
+    return cats.map(c => {
+      const items = d[c.key] || [];
+      if (!items.length) return '';
+      const sub = sumItems(items);
+      return `
+      <div class="cat-section">
+        <div class="cat-head">
+          <div class="cat-icon ${c.cls}">${c.icon}</div>
+          <div class="cat-title-block">
+            <div class="cat-title">${c.label}</div>
+            <div class="cat-sub">${c.sub}</div>
+          </div>
+          <span class="cat-count">${items.length} item${items.length !== 1 ? 's' : ''}</span>
+        </div>
+        <table class="line-tbl">
+          <tbody>
+            ${items.map(i => `
+            <tr>
+              <td class="iname">${esc(i.name)}</td>
+              <td class="iprice">${i.price != null ? fmt(i.price) : '<span style="color:var(--gray-light)">—</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="cat-subtotal">
+          <span class="sub-lbl">Subtotal</span>
+          <span class="sub-val">${fmt(sub)}</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Tiered mode
+  function renderTiered(d) {
+    const base = d.baseParts   || [];
+    const adds = d.addOns      || [];
+    const accs = d.accessories || [];
+
+    const baseTotal = sumItems(base);
+    const betterTotal = baseTotal + sumItems(adds);
+    const bestTotal   = betterTotal + sumItems(accs);
+
+    function listItems(arr) {
+      if (!arr.length) return '<li style="color:var(--gray-light);font-style:italic">None in this tier</li>';
+      return arr.map(i => `<li>${esc(i.name)}</li>`).join('');
+    }
+
+    return `
+    <div class="tiered-intro">
+      <h2>Choose Your Package</h2>
+      <p>Three investment levels — each building on the last. All packages include the same quality materials and craftsmanship.</p>
+    </div>
+    <div class="pkg-grid">
+      <div class="pkg-card good">
+        <div class="pkg-head">
+          <div class="pkg-tier">Package 01</div>
+          <div class="pkg-name">Good</div>
+          <div class="pkg-tagline">The solid foundation — everything the project needs to stand strong.</div>
+          <div class="pkg-price">${fmt(baseTotal)} <small>materials</small></div>
+        </div>
+        <div class="pkg-body">
+          <div class="pkg-sec-lbl">Base Structure</div>
+          <ul>${listItems(base)}</ul>
+        </div>
+      </div>
+
+      <div class="pkg-card better featured">
+        <div class="pkg-head">
+          <div class="pkg-tier">Package 02</div>
+          <div class="pkg-name">Better</div>
+          <div class="pkg-tagline">The most popular choice — adds real comfort and functionality.</div>
+          <div class="pkg-price">${fmt(betterTotal)} <small>materials</small></div>
+          <span class="pop-badge">Most Popular</span>
+        </div>
+        <div class="pkg-body">
+          <div class="pkg-sec-lbl">Base Structure</div>
+          <ul>${listItems(base)}</ul>
+          ${adds.length ? `<div class="pkg-sec-lbl" style="margin-top:12px">Add-Ons Included</div><ul>${listItems(adds)}</ul>` : ''}
+        </div>
+      </div>
+
+      <div class="pkg-card best">
+        <div class="pkg-head">
+          <div class="pkg-tier">Package 03</div>
+          <div class="pkg-name">Best</div>
+          <div class="pkg-tagline">The complete experience — fully finished and beautifully detailed.</div>
+          <div class="pkg-price">${fmt(bestTotal)} <small>materials</small></div>
+        </div>
+        <div class="pkg-body">
+          <div class="pkg-sec-lbl">Base Structure</div>
+          <ul>${listItems(base)}</ul>
+          ${adds.length ? `<div class="pkg-sec-lbl" style="margin-top:12px">Add-Ons Included</div><ul>${listItems(adds)}</ul>` : ''}
+          ${accs.length ? `<div class="pkg-sec-lbl" style="margin-top:12px">Accessories Included</div><ul>${listItems(accs)}</ul>` : ''}
+        </div>
+      </div>
+    </div>
+    <p class="pkg-materials-note">* Package prices reflect materials only. Labor, permitting, and electrical costs are itemized in the section below.</p>`;
+  }
+
+  // Needs Review
+  function renderNeedsReview(items) {
+    const block = $id('needsReview');
+    if (!items || !items.length) { block.classList.remove('show'); return; }
+    block.classList.add('show');
+    $id('nrItems').innerHTML = items.map(i => `
+      <div class="nr-item">
+        <div class="nr-name">${esc(i.name)}</div>
+        <span class="nr-reason">${esc(i.reason || 'Needs clarification')}</span>
+      </div>`).join('');
+  }
+
+  // ── LIVE TOTALS ────────────────────────────────────────────────────────
+  function updateTotals() {
+    if (!data) return;
+    const extra = extraCosts();
+    const hasExtra = extra > 0;
+
+    if (data._meta.mode === 'single') {
+      const mat = sumItems(data.baseParts) + sumItems(data.addOns) + sumItems(data.accessories);
+      $id('gtVal').textContent = fmt(mat + extra);
+      $id('gtNote').textContent = hasExtra
+        ? 'Includes materials + additional costs above'
+        : 'Materials only — enter costs above to update total';
+
+    } else {
+      // Tiered: show/hide loaded totals block
+      const base    = sumItems(data.baseParts);
+      const better  = base + sumItems(data.addOns);
+      const best    = better + sumItems(data.accessories);
+
+      const show = hasExtra;
+      $id('tieredTotals').classList.toggle('show', show);
+      $id('ttNote').style.display = show ? 'block' : 'none';
+
+      if (show) {
+        $id('ttGood').textContent   = fmt(base   + extra);
+        $id('ttBetter').textContent = fmt(better + extra);
+        $id('ttBest').textContent   = fmt(best   + extra);
+      }
+    }
+  }
+
+  // ── COPY EMAIL ─────────────────────────────────────────────────────────
+  function copyEmail() {
+    const text = $id('emailBody').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = $id('copyBtn');
+      const orig = btn.innerHTML;
+      btn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg> Copied!`;
+      btn.style.color = 'var(--sage)';
+      btn.style.borderColor = 'var(--sage)';
+      setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2200);
+    }).catch(() => alert('Copy failed — please select and copy the email text manually.'));
+  }
+</script>
+</body>
+</html>

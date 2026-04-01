@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quote Packaging Engine — Turn Vendor Quotes Into Client-Ready Proposals</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #1A1A18;
+    --ink-muted: #5C5C58;
+    --ink-faint: #9A9A94;
+    --cream: #F9F7F2;
+    --paper: #FFFFFF;
+    --sage: #3D6B52;
+    --sage-light: #EAF3EC;
+    --sage-mid: #C2DBC9;
+    --gold: #B8892A;
+    --gold-light: #FBF3E2;
+    --warm-border: #E8E4DA;
+    --radius: 12px;
+    --radius-lg: 20px;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    line-height: 1.6;
+    font-size: 16px;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(249,247,242,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--warm-border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+  }
+
+  .nav-logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    color: var(--ink);
+    letter-spacing: -0.02em;
+  }
+  .nav-logo span { color: var(--sage); }
+
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+  }
+  nav a {
+    text-decoration: none;
+    font-size: 14px;
+    color: var(--ink-muted);
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+  nav a:hover { color: var(--ink); }
+
+  .nav-cta {
+    background: var(--sage) !important;
+    color: white !important;
+    padding: 8px 20px;
+    border-radius: 100px;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    transition: background 0.2s, transform 0.15s !important;
+  }
+  .nav-cta:hover { background: #2F5440 !important; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 100px 2rem 80px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .hero-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--sage-light);
+    color: var(--sage);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 1.5rem;
+  }
+  .hero-tag::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--sage);
+    display: inline-block;
+  }
+
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(2.2rem, 4vw, 3.2rem);
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+  h1 em {
+    font-style: italic;
+    color: var(--sage);
+  }
+
+  .hero-sub {
+    font-size: 17px;
+    color: var(--ink-muted);
+    line-height: 1.7;
+    margin-bottom: 2rem;
+    max-width: 480px;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--sage);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #2F5440; transform: translateY(-2px); }
+
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    color: var(--ink);
+    padding: 14px 28px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1.5px solid var(--warm-border);
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.15s;
+  }
+  .btn-ghost:hover { border-color: var(--ink-muted); transform: translateY(-2px); }
+
+  /* HERO VISUAL */
+  .hero-visual {
+    position: relative;
+  }
+
+  .proposal-card {
+    background: var(--paper);
+    border: 1px solid var(--warm-border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 4px 40px rgba(0,0,0,0.06);
+    animation: floatUp 0.8s ease-out both;
+  }
+  @keyframes floatUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .card-header {
+    background: var(--sage);
+    color: white;
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .card-header-left { font-weight: 600; font-size: 14px; }
+  .card-header-left span { display: block; font-size: 11px; font-weight: 400; opacity: 0.75; margin-top: 2px; }
+  .card-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .card-body { padding: 20px; }
+
+  .card-section { margin-bottom: 16px; }
+  .card-section-title {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--warm-border);
+  }
+
+  .line-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    font-size: 13px;
+    color: var(--ink-muted);
+    border-bottom: 1px dashed var(--warm-border);
+  }
+  .line-item:last-child { border-bottom: none; }
+  .line-item strong { color: var(--ink); }
+
+  .pkg-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 4px;
+  }
+  .pkg-box {
+    border: 1px solid var(--warm-border);
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    font-size: 12px;
+  }
+  .pkg-box .pkg-name { font-weight: 600; color: var(--ink-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .pkg-box .pkg-price { font-family: 'DM Serif Display', serif; font-size: 16px; color: var(--ink); margin-top: 4px; }
+  .pkg-box.best { border-color: var(--sage); background: var(--sage-light); }
+  .pkg-box.best .pkg-name { color: var(--sage); }
+  .pkg-box.best .pkg-price { color: var(--sage); }
+
+  .floating-badge {
+    position: absolute;
+    bottom: -16px;
+    right: 20px;
+    background: var(--gold-light);
+    border: 1px solid #E8D4A0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: var(--gold);
+    font-weight: 500;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .floating-badge strong { display: block; font-size: 16px; font-weight: 600; }
+
+  /* SECTION SHARED */
+  section { padding: 80px 2rem; }
+  .section-inner { max-width: 1100px; margin: 0 auto; }
+
+  .section-eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(1.8rem, 3vw, 2.5rem);
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 1rem;
+  }
+
+  .section-sub {
+    font-size: 17px;
+    color: var(--ink-muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 3rem;
+  }
+
+  /* HOW IT WORKS */
+  .how-section { background: var(--paper); border-top: 1px solid var(--warm-border); border-bottom: 1px solid var(--warm-border); }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .step-card {
+    padding: 28px;
+    border: 1px solid var(--warm-border);
+    border-radius: var(--radius-lg);
+    background: var(--cream);
+    position: relative;
+    transition: border-color 0.2s, transform 0.2s;
+  }
+  .step-card:hover { border-color: var(--sage-mid); transform: translateY(-3px); }
+
+  .step-num {
+    width: 36px;
+    height: 36px;
+    background: var(--sage);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 16px;
+  }
+
+  .step-card h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .step-card p {
+    font-size: 14px;
+    color: var(--ink-muted);
+    line-height: 1.65;
+  }
+
+  .arrow-connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--sage-mid);
+    font-size: 20px;
+    align-self: center;
+    padding-top: 36px;
+  }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  .feature-list { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .feature-item { display: flex; gap: 16px; align-items: flex-start; }
+
+  .feature-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    background: var(--sage-light);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+
+  .feature-item h4 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .feature-item p { font-size: 14px; color: var(--ink-muted); line-height: 1.6; }
+
+  /* OUTPUT PREVIEW */
+  .output-section { background: var(--ink); color: white; }
+  .output-section h2 { color: white; }
+  .output-section .section-eyebrow { color: var(--sage-mid); }
+  .output-section .section-sub { color: rgba(255,255,255,0.6); }
+
+  .output-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .output-card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius-lg);
+    padding: 28px;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .output-card:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.2); }
+
+  .output-icon {
+    font-size: 28px;
+    margin-bottom: 16px;
+  }
+  .output-card h4 { font-size: 16px; font-weight: 600; color: white; margin-bottom: 8px; }
+  .output-card p { font-size: 14px; color: rgba(255,255,255,0.55); line-height: 1.65; }
+
+  /* WHO IT'S FOR */
+  .audience-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+
+  .audience-pill {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 20px;
+    background: var(--paper);
+    border: 1px solid var(--warm-border);
+    border-radius: var(--radius);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .audience-pill:hover { border-color: var(--sage-mid); background: var(--sage-light); }
+  .audience-pill-icon { font-size: 20px; }
+
+  /* CTA */
+  .cta-section {
+    background: var(--sage);
+    color: white;
+    text-align: center;
+    padding: 100px 2rem;
+  }
+  .cta-section h2 { color: white; max-width: 600px; margin: 0 auto 1rem; }
+  .cta-section p { color: rgba(255,255,255,0.75); font-size: 17px; max-width: 480px; margin: 0 auto 2.5rem; line-height: 1.7; }
+
+  .btn-white {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: white;
+    color: var(--sage);
+    padding: 16px 36px;
+    border-radius: 100px;
+    font-size: 16px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.15); }
+
+  .cta-fine { margin-top: 1.5rem; font-size: 13px; color: rgba(255,255,255,0.5); }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink);
+    color: rgba(255,255,255,0.4);
+    text-align: center;
+    padding: 2rem;
+    font-size: 13px;
+  }
+  footer strong { color: rgba(255,255,255,0.7); }
+
+  /* DIVIDER */
+  .divider { width: 48px; height: 3px; background: var(--sage); border-radius: 2px; margin-bottom: 1.5rem; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    .hero { grid-template-columns: 1fr; gap: 3rem; padding: 60px 1.5rem 60px; }
+    .hero-visual { order: -1; }
+    .features-grid { grid-template-columns: 1fr; }
+    nav ul { display: none; }
+    .steps-grid { grid-template-columns: 1fr; }
+    .arrow-connector { display: none; }
+    section { padding: 60px 1.5rem; }
+    .cta-section { padding: 60px 1.5rem; }
+  }
+
+  /* FADE IN ON SCROLL — lightweight */
+  .fade-in { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+  .fade-in.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">QPE <span>·</span> Quote Packaging Engine</div>
+  <ul>
+    <li><a href="#how">How it Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#outputs">Outputs</a></li>
+    <li><a href="#request" class="nav-cta">Request Access</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-content">
+    <div class="hero-tag">Quote Standardization Engine</div>
+    <h1>Stop sending raw<br>vendor quotes.<br><em>Start closing.</em></h1>
+    <p class="hero-sub">Upload a vendor quote. Get a structured, client-ready proposal — with tiered packages, fillable labor fields, and a ready-to-send email — in seconds.</p>
+    <div class="hero-actions">
+      <a href="#request" class="btn-primary">Request Early Access →</a>
+      <a href="#how" class="btn-ghost">See how it works</a>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="proposal-card">
+      <div class="card-header">
+        <div class="card-header-left">
+          Acadia Pergola Co.
+          <span>Project: Ridgeline Freestanding 14×20</span>
+        </div>
+        <div class="card-badge">BEST</div>
+      </div>
+      <div class="card-body">
+        <div class="card-section">
+          <div class="card-section-title">Package Options</div>
+          <div class="pkg-row">
+            <div class="pkg-box">
+              <div class="pkg-name">Good</div>
+              <div class="pkg-price">$6,840</div>
+            </div>
+            <div class="pkg-box">
+              <div class="pkg-name">Better</div>
+              <div class="pkg-price">$8,320</div>
+            </div>
+            <div class="pkg-box best">
+              <div class="pkg-name">Best ✓</div>
+              <div class="pkg-price">$10,150</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <div class="card-section-title">Vendor — Base Parts</div>
+          <div class="line-item"><strong>Ridgeline Frame System</strong><span>$4,200</span></div>
+          <div class="line-item"><strong>Post Anchors (4x)</strong><span>$480</span></div>
+          <div class="line-item"><strong>Shade Louvers</strong><span>$1,160</span></div>
+          <div class="line-item" style="font-weight:600; color: var(--ink); font-size:12px;">Subtotal<span>$5,840</span></div>
+        </div>
+
+        <div class="card-section">
+          <div class="card-section-title">Additional Costs (Fillable)</div>
+          <div class="line-item"><span>Permitting</span><span style="color: var(--sage); font-size:12px;">$ ______</span></div>
+          <div class="line-item"><span>Labor</span><span style="color: var(--sage); font-size:12px;">$ ______</span></div>
+          <div class="line-item"><span>Electrical</span><span style="color: var(--sage); font-size:12px;">$ ______</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="floating-badge">
+      <span>Proposal + Email</span>
+      <strong>Generated in &lt;30s</strong>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<section class="how-section" id="how">
+  <div class="section-inner">
+    <div class="section-eyebrow fade-in">How It Works</div>
+    <h2 class="fade-in">Four steps.<br>One clean proposal.</h2>
+    <p class="section-sub fade-in">No reformatting, no retyping. The engine handles categorization, structure, and delivery — you stay focused on the client.</p>
+
+    <div class="steps-grid">
+      <div class="step-card fade-in">
+        <div class="step-num">1</div>
+        <h3>Upload the vendor quote</h3>
+        <p>Paste text or upload a PDF from any vendor. The engine validates and ingests the document automatically.</p>
+      </div>
+
+      <div class="step-card fade-in">
+        <div class="step-num">2</div>
+        <h3>Items get categorized</h3>
+        <p>Every line item is sorted into Base Parts, Add-Ons, or Accessories — preserving original names and pricing. Nothing invented, nothing estimated.</p>
+      </div>
+
+      <div class="step-card fade-in">
+        <div class="step-num">3</div>
+        <h3>Packages are built</h3>
+        <p>Choose single-price or tiered mode. In tiered mode, the engine assembles Good / Better / Best options automatically using only vendor-provided items.</p>
+      </div>
+
+      <div class="step-card fade-in">
+        <div class="step-num">4</div>
+        <h3>Proposal + email sent</h3>
+        <p>A formatted proposal PDF is generated with fillable labor fields, and a professional email is drafted — ready for you to review and send.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-inner">
+    <div class="features-grid">
+      <div class="fade-in">
+        <div class="section-eyebrow">Features</div>
+        <div class="divider"></div>
+        <h2>Built for contractors who care about margins</h2>
+        <p class="section-sub">This isn't a PDF parser. It's a standardization layer that makes every quote your company sends look like it came from a team of three.</p>
+
+        <ul class="feature-list">
+          <li class="feature-item fade-in">
+            <div class="feature-icon">📋</div>
+            <div>
+              <h4>Strict data integrity</h4>
+              <p>The engine never invents items, modifies prices, or estimates missing costs. What you put in is what goes out — just organized.</p>
+            </div>
+          </li>
+          <li class="feature-item fade-in">
+            <div class="feature-icon">📦</div>
+            <div>
+              <h4>Good / Better / Best packaging</h4>
+              <p>Tiered proposals increase average ticket size by giving customers a decision, not a take-it-or-leave-it number.</p>
+            </div>
+          </li>
+          <li class="feature-item fade-in">
+            <div class="feature-icon">✍️</div>
+            <div>
+              <h4>Fillable internal cost sections</h4>
+              <p>Permitting, labor, electrical, and company add-ons are always included as blank fields — ready for your team to complete before sending.</p>
+            </div>
+          </li>
+          <li class="feature-item fade-in">
+            <div class="feature-icon">📧</div>
+            <div>
+              <h4>Ready-to-send email included</h4>
+              <p>A professional, no-emoji, client-facing email is generated alongside every proposal — branded to your company.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="fade-in" style="padding: 2rem 0;">
+        <div style="background: var(--paper); border: 1px solid var(--warm-border); border-radius: var(--radius-lg); padding: 28px; margin-bottom: 1rem;">
+          <div style="font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 14px;">Sample Email Output</div>
+          <p style="font-size: 13px; color: var(--ink-muted); line-height: 1.75; border-left: 3px solid var(--sage-mid); padding-left: 14px;">
+            <strong style="display: block; color: var(--ink); margin-bottom: 8px;">Subject: Your Pergola Project Quote Options</strong>
+            Hi [Customer Name],<br><br>
+            I've put together your pergola quote based on the selected configuration and vendor pricing. You'll see a few options outlined so you can choose what best fits your needs and budget.<br><br>
+            Please review and let me know which option you'd like to move forward with, or if you'd like any adjustments.<br><br>
+            <em>— Acadia Pergola Co.</em>
+          </p>
+        </div>
+
+        <div style="background: var(--gold-light); border: 1px solid #E8D4A0; border-radius: var(--radius); padding: 20px; display: flex; gap: 14px; align-items: flex-start;">
+          <div style="font-size: 22px;">⚑</div>
+          <div>
+            <div style="font-size: 13px; font-weight: 600; color: var(--gold); margin-bottom: 4px;">Needs Review Flag</div>
+            <p style="font-size: 13px; color: #8C6820; line-height: 1.6;">Ambiguous items, missing pricing, or unclear descriptions are automatically flagged in a separate section — never buried in the proposal.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OUTPUTS -->
+<section class="output-section" id="outputs">
+  <div class="section-inner">
+    <div class="section-eyebrow fade-in">What You Get</div>
+    <h2 class="fade-in" style="margin-bottom: 0.75rem;">Every output, every time.</h2>
+    <p class="section-sub fade-in">The engine always produces a complete package — not just a categorized list.</p>
+
+    <div class="output-grid">
+      <div class="output-card fade-in">
+        <div class="output-icon">📄</div>
+        <h4>Formatted Proposal PDF</h4>
+        <p>Branded, structured, print-ready. Includes project summary, vendor breakdown or tiered packages, and fillable cost fields.</p>
+      </div>
+      <div class="output-card fade-in">
+        <div class="output-icon">📦</div>
+        <h4>Tiered Package View</h4>
+        <p>Good / Better / Best with per-tier totals, built only from vendor-provided items. No fabrication, no guessing.</p>
+      </div>
+      <div class="output-card fade-in">
+        <div class="output-icon">✉️</div>
+        <h4>Client Email Draft</h4>
+        <p>Professional, direct, no-emoji. Ready to copy, personalize, and send — or auto-send via CRM integration (coming soon).</p>
+      </div>
+      <div class="output-card fade-in">
+        <div class="output-icon">⚑</div>
+        <h4>Needs Review Section</h4>
+        <p>Any item that couldn't be cleanly categorized is flagged with a reason — so nothing slips through to the client unreviewed.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO IT'S FOR -->
+<section>
+  <div class="section-inner">
+    <div class="section-eyebrow fade-in">Who It's For</div>
+    <h2 class="fade-in">Any company that quotes projects<br>from vendor pricing</h2>
+    <p class="section-sub fade-in">Built first for outdoor living contractors, but the engine works across any industry where you're packaging a vendor quote into a customer-facing proposal.</p>
+
+    <div class="audience-grid fade-in">
+      <div class="audience-pill"><span class="audience-pill-icon">🌿</span> Pergola & Shade Companies</div>
+      <div class="audience-pill"><span class="audience-pill-icon">🪟</span> Window & Door Dealers</div>
+      <div class="audience-pill"><span class="audience-pill-icon">💡</span> Solar & Electrical Contractors</div>
+      <div class="audience-pill"><span class="audience-pill-icon">🔧</span> HVAC & Mechanical</div>
+      <div class="audience-pill"><span class="audience-pill-icon">🏗️</span> General Contractors</div>
+      <div class="audience-pill"><span class="audience-pill-icon">🌳</span> Landscaping & Hardscape</div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="request">
+  <h2 class="fade-in">Ready to standardize<br>your quote process?</h2>
+  <p class="fade-in">QPE is currently in early access. Join the waitlist and be first to try it with your own vendor quotes.</p>
+<div style="max-width: 480px; margin: 0 auto; background: transparent;">
+    <iframe data-tally-src="https://tally.so/embed/Y5YOY6?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1"
+      loading="lazy" width="100%" height="180" frameborder="0" marginheight="0" marginwidth="0"
+      style="background: transparent; color-scheme: light;"
+      title="QPE Early Access"></iframe>
+  </div>
+  <p class="cta-fine fade-in">No commitment required · Built by QAMW Consulting</p>
+  <script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w;s.onload=v;s.onerror=v;d.body.appendChild(s);}</script>
+</section>
+
+<!-- FOOTER -->
+<!-- FOOTER -->
+<footer>
+  <p><strong>Quote Packaging Engine</strong>· info@qamwconsulting.com</p>
+</footer>
+
+<script>
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) { e.target.classList.add('visible'); }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
